@@ -20,7 +20,7 @@ creds = store.get()
 if not creds or creds.invalid:
     flow = client.flow_from_clientsecrets(abs_path + 'creds/drivecreds.json', SCOPES)
     creds = tools.run_flow(flow, store)
-service = build('drive', 'v3', http=creds.authorize(Http()))
+#service = build('drive', 'v3', http=creds.authorize(Http()))
 
 grapherson = Grapher()
 frequency_name = grapherson.graph_of_messages(timespan="day")
@@ -29,12 +29,23 @@ print(wordcloud_name)
 print(frequency_name)
 
 folderid = '1qO9CXijYdUWL_efZZy9YlOWziOhnrlWY'
-file_metadata = {
-    'name': photo_name,
+wordcloud_metadata = {
+    'name': wordcloud_name,
     'parents':[folderid]
 }
-media = MediaFileUpload(abs_path + 'photos/' +wordcloud_name,
+frequency_metadata = {
+    'name': frequency_name,
+    'parents':[folderid]
+}
+
+wordcloud = MediaFileUpload(abs_path + 'photos/' +wordcloud_name,
                         mimetype='image/png')
-file= service.files().create(body=file_metadata,
-                                   media_body=media,
+file= service.files().create(body=wordcloud_metadata,
+                                   media_body=wordcloud,
+                                   fields='id').execute()
+
+frequency = MediaFileUpload(abs_path + 'photos/' +frequency_name,
+                        mimetype='image/png')
+file= service.files().create(body=frequency_metadata,
+                                   media_body=frequency,
                                    fields='id').execute()

@@ -11,7 +11,10 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-conn = psycopg2.connect("dbname=messenger user=sp1r3")
+abs_path = "/Users/sp1r3/Documents/projects/websites/messenger/"
+username = "sp1r3"
+password = ""
+conn = psycopg2.connect("dbname=messenger user="+username+" password="+password)
 cur = conn.cursor()
 abs_path = "/Users/sp1r3/Documents/projects/websites/messenger/"
 class Grapher():
