@@ -14,10 +14,8 @@ class CustomClient(Client):
         for added_id in added_ids:
             cur.execute("INSERT INTO CaG (UID, THREAD_ID, TIMESTAMP, GOING) values (%s, %s, %s, %s);", (added_id, thread_id, current_time, False))
             conn.commit()
-            #print(added_id + " got added!")
     def onPersonRemoved(self, removed_id, author_id, thread_id, **kwargs):
         current_time = time.clock_gettime(0)
-        #print(removed_id + " left group")
         cur.execute("INSERT INTO CaG (UID, THREAD_ID, TIMESTAMP, GOING) values (%s, %s, %s, %s);", (removed_id, thread_id, current_time, True))
         conn.commit()
     def onMessageSeen(self, seen_by, thread_id, thread_type, seen_ts, ts, metadata, msg):
@@ -41,13 +39,11 @@ class CustomClient(Client):
                 self.disco_time(threadid)
             cur.execute("INSERT INTO messages(messageid, text, author, threadid, timestamp) VALUES (%s, %s, %s, %s, %s);", (uid, text, author, threadid, timestamp))
             conn.commit() 
-            #print("Author: " + message_object.author + '\n' + "Text: " + message_object.text+ '\n' + "TimeStamp: " + str(message_object.timestamp))
     def addUser(self, uid):    
         cur.execute("ROLLBACK")
         cur.execute("SELECT name FROM users WHERE uid = %s;", (uid,))
         user = cur.fetchone()
         if not user:
-            #print("adding user")
             user = self.fetchUserInfo(uid)[uid]
             cur.execute("INSERT INTO USERS(uid, name, profilepic) VALUES (%s, %s, %s);", (user.uid, user.name, user.photo))
             conn.commit()
@@ -75,5 +71,5 @@ client = CustomClient(conf['username'],conf['password'])
 client.listen()
 cur.close()
 conn.close()
-#messages = client.fetchThreadMessages(thread_id = thread_id, limit=200)
+messages = client.fetchThreadMessages(thread_id = thread_id, limit=200)
 #client.send(Message(text='fug'), thread_id=thread_id, thread_type=thread_type)
