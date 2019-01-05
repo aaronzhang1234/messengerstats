@@ -8,7 +8,7 @@ conn = psycopg2.connect("dbname=messenger user=sp1r3")
 cur = conn.cursor() 
 thread_type = ThreadType.GROUP
 
-conf = json.load(open('config.json', 'r'))
+conf = json.load(open('creds/config.json', 'r'))
 timestamp=None
 thread_id = conf['thread_main']
 client = Client(conf['username_bobby'],conf['password_bobby'])

@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-conf = json.load(open('config.json', 'r'))
+conf = json.load(open('creds/config.json', 'r'))
 
 conn = psycopg2.connect("dbname=messenger user=sp1r3")
 cur = conn.cursor()

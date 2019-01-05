@@ -4,10 +4,9 @@ import psycopg2
 import json
 import time
 
-conn = psycopg2.connect("dbname=messenger user=sp1r3")
-cur = conn.cursor() 
 thread_type = ThreadType.GROUP
-
+conn = psycopg2.connect("dbname=messenger user=sp1r3")
+cur = conn.cursor()
 class CustomClient(Client):
     def onPeopleAdded(self, added_ids, author_id, thread_id, **kwargs):
         current_time = time.clock_gettime(0)
@@ -22,23 +21,30 @@ class CustomClient(Client):
         self.addUser(seen_by)
     def onMessage(self, mid, author_id, message_object, thread_id, thread_type, ts, metadata, msg, **kwargs):
         self.addUser(author_id)
-        uid = message_object.uid
-        author = message_object.author
-        threadid = metadata['threadKey']['threadFbId']
-        timestamp = int(message_object.timestamp)/1000
-        if len(message_object.attachments)>=1:
-            image_urls = []
-            for image in message_object.attachments:
-                image_urls.append(image.preview_url) 
-            image_urls_text = '\n'.join(image_urls)
-            cur.execute("INSERT INTO messages(messageid, text, author, threadid, timestamp) VALUES (%s, %s, %s, %s, %s);", (uid, image_urls_text, author, threadid, timestamp))
-            conn.commit() 
-        else:
-            text = message_object.text
-            if text=='disco':
-                self.disco_time(threadid)
-            cur.execute("INSERT INTO messages(messageid, text, author, threadid, timestamp) VALUES (%s, %s, %s, %s, %s);", (uid, text, author, threadid, timestamp))
-            conn.commit() 
+        attachments = message_object.attachments
+        message_timestamp = int(message_object.timestamp)/1000
+        message_author = message_object.author
+        message_uid = message_object.uid
+        if message_object.text!=None or len(attachments)>=1: 
+            if len(attachments)>=1: 
+                for attachment in attachments:
+                    attach_url = ""
+                    attach_type = type(attachment)
+                    attachment_id = attachment.uid
+                    if attach_type is AudioAttachment or attach_type is FileAttachment or attach_type is Sticker:
+                        attach_url = attachment.url
+                        query = "INSERT INTO MESSAGES (UID, AUTHOR, THREAD_ID, IS_MEDIA, ATTACHMENT_ID, ATTACHMENT_LINK, TIMESTAMP) values (%s, %s, %s, %s, %s, %s, %s);"
+                        cur.execute(query, (message_uid, message_author, thread_id, 'F', attachment_id, attach_url, message_timestamp))
+                    elif attach_type is ImageAttachment or attach_type is VideoAttachment:
+                        attach_url = attachment.preview_url
+                        query = "INSERT INTO MESSAGES (UID, AUTHOR, THREAD_ID, IS_MEDIA, ATTACHMENT_ID, ATTACHMENT_LINK, TIMESTAMP) values (%s, %s, %s, %s, %s, %s, %s);"
+                        cur.execute(query, (message_uid, message_author, thread_id, 'T', attachment_id, attach_url, message_timestamp))
+                    conn.commit()
+            else:
+                text = message_object.text
+                query = "INSERT INTO MESSAGES (UID, TEXT, AUTHOR, THREAD_ID, TIMESTAMP) values (%s, %s, %s, %s, %s);"
+                cur.execute(query, (message_uid, text, message_author, thread_id, message_timestamp))
+                conn.commit()
     def addUser(self, uid):    
         cur.execute("SELECT name FROM users WHERE uid = %s;", (uid,))
         user = cur.fetchone()
@@ -65,10 +71,3 @@ class CustomClient(Client):
         for color in colors:
             self.changeThreadColor(color, thread_id)            
 
-conf = json.load(open('config.json', 'r'))
-client = CustomClient(conf['username'],conf['password'])
-client.listen()
-cur.close()
-conn.close()
-messages = client.fetchThreadMessages(thread_id = thread_id, limit=200)
-#client.send(Message(text='fug'), thread_id=thread_id, thread_type=thread_type)
