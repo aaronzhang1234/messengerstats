@@ -3,6 +3,7 @@ from fbchat import log, Client
 from fbchat.models import *
 import psycopg2
 import json
+import bcrypt
 import os
 import time
 import urllib.request

@@ -40,7 +40,6 @@ class CustomClient(Client):
             cur.execute("INSERT INTO messages(messageid, text, author, threadid, timestamp) VALUES (%s, %s, %s, %s, %s);", (uid, text, author, threadid, timestamp))
             conn.commit() 
     def addUser(self, uid):    
-        cur.execute("ROLLBACK")
         cur.execute("SELECT name FROM users WHERE uid = %s;", (uid,))
         user = cur.fetchone()
         if not user:
