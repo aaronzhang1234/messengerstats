@@ -2,3 +2,6 @@ env/*
 creds/*
 .vscode/*
 __pycache__/*
+messages.csv
+photos/*
+.DS_Store
