@@ -39,6 +39,7 @@ while len(messages)>=2:
                     conn.commit()
             else:
                 text = message_object.text
+                print(text)
                 query = "INSERT INTO MESSAGES (UID, TEXT, AUTHOR, THREAD_ID, TIMESTAMP) values (%s, %s, %s, %s, %s);"
                 cur.execute(query, (message_uid, text, message_author, thread_id, message_timestamp))
                 conn.commit()
