@@ -16,9 +16,9 @@ class Grapher():
     def wordcloud(self, for_users=False, timespan=''):
         os.system('rm photos/*.png')
         dumb_words = open("dumbwords.txt", "r")
-        date_start, date_end = self.get_dates(timespan)
-        query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND TIMESTAMP > %s AND TIMESTAMP <%s") 
-        cur.execute(query, (date_start, date_end))
+        date_start= self.get_dates(timespan)
+        query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND TIMESTAMP > %s") 
+        cur.execute(query, (date_start, ))
         texts = cur.fetchall() 
         total_words = ""
         for text in texts:
@@ -32,14 +32,14 @@ class Grapher():
         plt.axis("off")
         plt.savefig('photos/today.png')
         if for_users:
-            query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR AND TIMESTAMP > %s AND TIMESTAMP < %s")
-            cur.execute(query, (date_start, date_end))
+            query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR AND TIMESTAMP > %s ")
+            cur.execute(query, (date_start,))
             users = cur.fetchall()
             for user in users:
                if user[1]:
                    print("Starting " + user[1])
-                   query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND AUTHOR=%s AND TIMESTAMP > %s AND TIMESTAMP < %s ")
-                   cur.execute(query, (user[0], date_start, date_end))
+                   query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND AUTHOR=%s AND TIMESTAMP > %s")
+                   cur.execute(query, (user[0], date_start))
                    texts = cur.fetchall()
                    total_words = 'fuck '
                    for text in texts:
@@ -67,42 +67,19 @@ class Grapher():
                total_flesch = total_flesch + textstat.flesch_kincaid_grade(text[0]+".")
            average_flesch = total_flesch / num_tuples
            print(user[0] +"'s Flesch is " + str(average_flesch))
-    def piechart(self):
-        cur.execute('SELECT NAME, COUNT(DISTINCT MESSAGES.UID) FROM MESSAGES RIGHT JOIN USERS ON MESSAGES.AUTHOR=USERS.UID WHERE THREAD_ID=%s GROUP BY NAME ORDER BY COUNT(DISTINCT MESSAGES.UID) DESC', (conf["thread_main"],));
-        messagesent = cur.fetchall()
-        names = []
-        numsent = []
-        for msg in messagesent:
-            names.append(msg[0])
-            numsent.append(msg[1])
-        fig1, ax1 = plt.subplots()
-        wedges, texts = ax1.pie(numsent, shadow=True, startangle=90)
-        ax1.legend(wedges, names,
-                   title="Users",
-                   loc="center left",
-                   bbox_to_anchor=(1,0, 2, 0))
-        ax1.set_title("Messenger Stats")
-        ax1.axis('equal')
-        plt.show()
     def get_dates(self, timespan = ''):
-        print(timespan)
         date_start = 0
-        date_end = 2000000000
         p = '%Y-%m-%d %H:%M:%S'
+        current_time = datetime.today().replace(microsecond=0)
+        if timespan == 'hour':
+            last_midnight_datetime = str(current_time - timedelta(hours=1))
         if timespan == 'day':
-            midnight_date = datetime.combine(datetime.today(), time.min)
-            last_midnight_datetime = str(midnight_date - timedelta(days=1))
-            date_start = int(t.mktime(t.strptime(last_midnight_datetime, p)))
-            date_end = int(t.mktime(t.strptime(str(midnight_date), p)))
+            last_midnight_datetime = str(current_time - timedelta(days=1))
         if timespan =='week':
-            midnight_date = datetime.combine(datetime.today(), time.min)
-            last_midnight_datetime = str(midnight_date - timedelta(weeks=1))
-            date_start = int(t.mktime(t.strptime(last_midnight_datetime, p)))
-            date_end = int(t.mktime(t.strptime(str(midnight_date), p)))
+            last_midnight_datetime = str(current_time - timedelta(weeks=1))
         if timespan =='month':
-            midnight_date = datetime.combine(datetime.today(), time.min)
-            last_midnight_datetime = str(midnight_date - timedelta(weeks=4))
-            date_start = int(t.mktime(t.strptime(last_midnight_datetime, p)))
-            date_end = int(t.mktime(t.strptime(str(midnight_date), p)))
-        return date_start,date_end
+            last_midnight_datetime = str(current_time - timedelta(weeks=4))
+        print(last_midnight_datetime)
+        date_start = int(t.mktime(t.strptime(last_midnight_datetime, p)))
+        return date_start
 
