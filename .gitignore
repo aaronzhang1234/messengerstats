@@ -5,3 +5,4 @@ __pycache__/*
 messages.csv
 photos/*
 .DS_Store
+names.txt
