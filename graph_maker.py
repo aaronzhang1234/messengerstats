@@ -2,6 +2,7 @@ import re
 import os
 from datetime import datetime, time, timedelta
 import time as t
+from pytz import timezone
 import psycopg2
 import textstat
 from wordcloud import WordCloud
@@ -14,7 +15,7 @@ cur = conn.cursor()
 
 class Grapher():
     def wordcloud(self, for_users=False, timespan='', show_names = False):
-        date_start, date_now= self.get_dates(timespan)
+        date_start, date_now, date_name= self.get_dates(timespan)
         query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND TIMESTAMP > %s AND TIMESTAMP < %s") 
         cur.execute(query, (date_start, date_now))
         texts = cur.fetchall() 
@@ -22,7 +23,7 @@ class Grapher():
         wordcloud = WordCloud(background_color="white").generate(total_words)
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
-        plt.savefig('photos/today.png')
+        plt.savefig('photos/wordcloud('+date_name+').png')
         if for_users:
             query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND TIMESTAMP < %s AND NAME IS NOT NULL")
             cur.execute(query, (date_start, date_now))
@@ -61,42 +62,59 @@ class Grapher():
        names.close()
        return string_to_trim
     def graph_of_messages(self, timespan='week'):
-        date_start, date_now = self.get_dates(timespan)
-        query = ("SELECT DISTINCT AUTHOR,NAME,COUNT(DISTINCT MESSAGES.UID) FROM MESSAGES LEFT JOIN USERS ON AUTHOR=USERS.UID WHERE TIMESTAMP >%s AND TIMESTAMP<%s AND NAME IS NOT NULL GROUP BY AUTHOR,NAME ORDER  BY COUNT(DISTINCT MESSAGES.UID) DESC  LIMIT 10")
+        date_start, date_now, date_name = self.get_dates(timespan)
+        query = ("SELECT DISTINCT AUTHOR,NAME,COUNT(DISTINCT MESSAGES.UID) FROM MESSAGES LEFT JOIN USERS ON AUTHOR=USERS.UID WHERE TIMESTAMP >%s AND TIMESTAMP<%s AND NAME IS NOT NULL GROUP BY AUTHOR,NAME ORDER  BY COUNT(DISTINCT MESSAGES.UID) DESC  LIMIT 5")
         cur.execute(query, (date_start, date_now))
         users = cur.fetchall()
-        print(users)
-        user_frequency={}
+        user_frequency_total={}
+        user_frequency_time = {}
         for user in users:
             print("User: " + user[1])
             hour_start = date_start
             hour_end = date_start + 3600
-            user_plots=[0]
-            user_tweets = 0
+            user_plots_total= [0]
+            user_plots_time = [0]
+            user_msgs_total = 0
             query = ("SELECT MESSAGES.AUTHOR,COUNT(DISTINCT MESSAGES.UID) FROM MESSAGES LEFT JOIN USERS ON AUTHOR=USERS.UID WHERE MESSAGES.AUTHOR=%s AND TIMESTAMP>%s AND TIMESTAMP < %s GROUP BY MESSAGES.AUTHOR")
             while hour_end <=date_now:
+                user_msgs_time = 0
                 cur.execute(query, (user[0], hour_start, hour_end))
                 tweets_in_hour = cur.fetchone() 
                 if not tweets_in_hour:
-                    user_tweets += 0 
+                    user_msgs_total += 0 
                 else:
-                    user_tweets +=  tweets_in_hour[1]
-                user_plots.append(user_tweets)
+                    user_msgs_total +=  tweets_in_hour[1]
+                    user_msgs_time   =  tweets_in_hour[1]
+                user_plots_time.append(user_msgs_time)
+                user_plots_total.append(user_msgs_total)
                 hour_start += 3600
                 hour_end   += 3600
-            user_frequency[user[1]] = user_plots
-        for user, amount in user_frequency.items():
+            user_frequency_total[user[1]] = user_plots_total
+            user_frequency_time[user[1]]  = user_plots_time
+            print(user_frequency_total[user[1]])
+            print(user_frequency_time[user[1]])
+        plt.subplot(2,1,1)
+        for user, amount in user_frequency_total.items():
             plt.plot(amount, label=user)
-        plt.legend(loc="best")
+        plt.legend(loc="upper left")
         plt.xlabel("Time of Day(24 Hour Clock)")
         plt.xticks(range(0,25), fontsize=5)
         plt.gca().xaxis.grid(True)
         plt.xlim(left=0.0, right=24)
         plt.ylim(bottom=0.0)
-        plt.savefig("photos/messenger_frequency.png")
+        plt.subplot(2,1,2)
+        for user, amount in user_frequency_time.items():
+            plt.plot(amount, label=user)
+        plt.legend(loc="lower left")
+        plt.xlabel("Time of Day(24 Hour Clock)")
+        plt.xticks(range(0,25), fontsize=5)
+        plt.gca().xaxis.grid(True)
+        plt.xlim(left=0.0, right=24)
+        plt.ylim(bottom=0.0)
+        plt.savefig("photos/messenger_frequency(" +date_name +").png")
         plt.cla()
     def flesch(self, timespan=""):
-        date_start, date_now = self.get_dates(timespan)
+        date_start, date_now, date_name = self.get_dates(timespan)
         query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND NAME IS NOT NULL")
         cur.execute(query, (date_start,))
         users = cur.fetchall()
@@ -124,17 +142,22 @@ class Grapher():
         date_start = 0
         p = '%Y-%m-%d %H:%M:%S'
         current_time = datetime.today().replace(microsecond=0)
-        date_now = int(t.mktime(t.strptime(str(current_time), p)))
+        this_midnight = datetime.combine(datetime.today(), time.min)
+        print(this_midnight)
+        date_end = int(t.mktime(t.strptime(str(current_time), p))) 
         if timespan == 'hour':
-            last_midnight_datetime = str(current_time - timedelta(hours=1))
+            last_midnight_datetime = current_time - timedelta(hours=1)
         elif timespan == 'day':
-            last_midnight_datetime = str(current_time - timedelta(days=1))
+            last_midnight_datetime = this_midnight - timedelta(days=1)
         elif timespan =='week':
-            last_midnight_datetime = str(current_time - timedelta(weeks=1))
+            last_midnight_datetime = this_midnight - timedelta(weeks=1)
         elif timespan =='month':
-            last_midnight_datetime = str(current_time - timedelta(weeks=4))
+            if this_midnight.day > 25:
+                this_midnight += timedelta(7)
+            last_midnight_datetime = this_midnight.replace(day=1)
         else:
-            return 0, date_now
-        current_time = str(current_time)
-        date_start = int(t.mktime(t.strptime(last_midnight_datetime, p)))
-        return date_start, date_now
+            return 0, date_end,'beginning'
+        date_start = int(t.mktime(t.strptime(str(last_midnight_datetime), p)))
+        date_end   = int(t.mktime(t.strptime(str(this_midnight), p)))
+        date_name  = last_midnight_datetime.strftime('%Y-%b-%d')
+        return date_start, date_end, date_name
