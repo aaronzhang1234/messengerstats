@@ -1,6 +1,7 @@
 import re
 import os
 from datetime import datetime, time, timedelta
+from collections import OrderedDict
 import time as t
 from pytz import timezone
 import psycopg2
@@ -20,9 +21,10 @@ class Grapher():
         cur.execute(query, (date_start, date_now))
         texts = cur.fetchall() 
         total_words = self.parse_text(texts, show_names)
-        wordcloud = WordCloud(background_color="white").generate(total_words)
+        wordcloud = WordCloud(collocations=False, background_color="white").generate(total_words)
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
+        photo_name = "wordcoud("+date_name+").png"
         plt.savefig('photos/wordcloud('+date_name+').png')
         if for_users:
             query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND TIMESTAMP < %s AND NAME IS NOT NULL")
@@ -39,6 +41,7 @@ class Grapher():
                    plt.imshow(wordcloud, interpolation='bilinear')
                    plt.axis("off")
                    plt.savefig('photos/' + user[1] + '.png')
+        return photo_name
         plt.cla()
     def parse_text(self, tuple_of_text, show_names):
        string_to_trim = ""
@@ -66,8 +69,8 @@ class Grapher():
         query = ("SELECT DISTINCT AUTHOR,NAME,COUNT(DISTINCT MESSAGES.UID) FROM MESSAGES LEFT JOIN USERS ON AUTHOR=USERS.UID WHERE TIMESTAMP >%s AND TIMESTAMP<%s AND NAME IS NOT NULL GROUP BY AUTHOR,NAME ORDER  BY COUNT(DISTINCT MESSAGES.UID) DESC  LIMIT 5")
         cur.execute(query, (date_start, date_now))
         users = cur.fetchall()
-        user_frequency_total={}
-        user_frequency_time = {}
+        user_frequency_total=OrderedDict()
+        user_frequency_time = OrderedDict()
         for user in users:
             print("User: " + user[1])
             hour_start = date_start
@@ -97,7 +100,6 @@ class Grapher():
         for user, amount in user_frequency_total.items():
             plt.plot(amount, label=user)
         plt.legend(loc="upper left")
-        plt.xlabel("Time of Day(24 Hour Clock)")
         plt.xticks(range(0,25), fontsize=5)
         plt.gca().xaxis.grid(True)
         plt.xlim(left=0.0, right=24)
@@ -105,7 +107,6 @@ class Grapher():
         plt.subplot(2,1,2)
         for user, amount in user_frequency_time.items():
             plt.plot(amount, label=user)
-        plt.legend(loc="lower left")
         plt.xlabel("Time of Day(24 Hour Clock)")
         plt.xticks(range(0,25), fontsize=5)
         plt.gca().xaxis.grid(True)
