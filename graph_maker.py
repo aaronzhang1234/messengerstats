@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 conn = psycopg2.connect("dbname=messenger user=sp1r3")
 cur = conn.cursor()
-
+abs_path = "/Users/sp1r3/Documents/projects/websites/messenger/"
 class Grapher():
     def wordcloud(self, for_users=False, timespan='', show_names = False):
         date_start, date_now, date_name= self.get_dates(timespan)
@@ -24,8 +24,8 @@ class Grapher():
         wordcloud = WordCloud(collocations=False, background_color="white").generate(total_words)
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
-        photo_name = "wordcoud("+date_name+").png"
-        plt.savefig('photos/wordcloud('+date_name+').png')
+        photo_name ="wordcloud("+date_name+").png"
+        plt.savefig(abs_path+'photos/wordcloud('+date_name+').png')
         if for_users:
             query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND TIMESTAMP < %s AND NAME IS NOT NULL")
             cur.execute(query, (date_start, date_now))
@@ -40,7 +40,7 @@ class Grapher():
                    wordcloud = WordCloud(background_color="white").generate(total_words)
                    plt.imshow(wordcloud, interpolation='bilinear')
                    plt.axis("off")
-                   plt.savefig('photos/' + user[1] + '.png')
+                   plt.savefig(abs_path + 'photos/' + user[1] + '.png')
         return photo_name
         plt.cla()
     def parse_text(self, tuple_of_text, show_names):
@@ -49,8 +49,8 @@ class Grapher():
           if len(text[0]) < 100:
              string_to_trim = " ".join([string_to_trim,text[0].lower()]) 
        string_to_trim = re.sub(r"https\S+", "", string_to_trim)
-       dumb_words = open("dumbwords.txt", "r") 
-       names = open('names.txt', "r")
+       dumb_words = open(abs_path + "dumbwords.txt", "r") 
+       names = open(abs_path + 'names.txt', "r")
        for dumb_word in dumb_words:
            dumb_words_stripped = (dumb_word.rstrip()).lower()
            string_to_trim = string_to_trim.replace(" "+dumb_words_stripped+" ", " ")
@@ -69,10 +69,9 @@ class Grapher():
         query = ("SELECT DISTINCT AUTHOR,NAME,COUNT(DISTINCT MESSAGES.UID) FROM MESSAGES LEFT JOIN USERS ON AUTHOR=USERS.UID WHERE TIMESTAMP >%s AND TIMESTAMP<%s AND NAME IS NOT NULL GROUP BY AUTHOR,NAME ORDER  BY COUNT(DISTINCT MESSAGES.UID) DESC  LIMIT 5")
         cur.execute(query, (date_start, date_now))
         users = cur.fetchall()
-        user_frequency_total=OrderedDict()
-        user_frequency_time = OrderedDict()
+        user_frequency_total = OrderedDict()
+        user_frequency_time  = OrderedDict()
         for user in users:
-            print("User: " + user[1])
             hour_start = date_start
             hour_end = date_start + 3600
             user_plots_total= [0]
@@ -94,8 +93,6 @@ class Grapher():
                 hour_end   += 3600
             user_frequency_total[user[1]] = user_plots_total
             user_frequency_time[user[1]]  = user_plots_time
-            print(user_frequency_total[user[1]])
-            print(user_frequency_time[user[1]])
         plt.subplot(2,1,1)
         for user, amount in user_frequency_total.items():
             plt.plot(amount, label=user)
@@ -112,8 +109,10 @@ class Grapher():
         plt.gca().xaxis.grid(True)
         plt.xlim(left=0.0, right=24)
         plt.ylim(bottom=0.0)
-        plt.savefig("photos/messenger_frequency(" +date_name +").png")
+        picture_name = "messenger_frequency("+date_name+").png"
+        plt.savefig(abs_path + "photos/" + picture_name)
         plt.cla()
+        return picture_name
     def flesch(self, timespan=""):
         date_start, date_now, date_name = self.get_dates(timespan)
         query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND NAME IS NOT NULL")
