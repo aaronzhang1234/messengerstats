@@ -11,12 +11,11 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-abs_path = "/Users/sp1r3/Documents/projects/websites/messenger/"
-username = "sp1r3"
-password = ""
+abs_path = '/home/ubuntu/messengerstats/'
+username = "postgres"
+password = "postgres"
 conn = psycopg2.connect("dbname=messenger user="+username+" password="+password)
 cur = conn.cursor()
-abs_path = "/Users/sp1r3/Documents/projects/websites/messenger/"
 class Grapher():
     def wordcloud(self, for_users=False, timespan='', show_names = False):
         date_start, date_now, date_name= self.get_dates(timespan)

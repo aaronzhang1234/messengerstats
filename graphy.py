@@ -11,7 +11,7 @@ from oauth2client import file, client, tools
 from apiclient.http import MediaFileUpload
 import os
 
-abs_path = '/Users/sp1r3/Documents/projects/websites/messenger/'
+abs_path = '/home/ubuntu/messengerstats/'
 SCOPES = 'https://www.googleapis.com/auth/drive'
 
 
@@ -20,7 +20,7 @@ creds = store.get()
 if not creds or creds.invalid:
     flow = client.flow_from_clientsecrets(abs_path + 'creds/drivecreds.json', SCOPES)
     creds = tools.run_flow(flow, store)
-#service = build('drive', 'v3', http=creds.authorize(Http()))
+service = build('drive', 'v3', http=creds.authorize(Http()))
 
 grapherson = Grapher()
 frequency_name = grapherson.graph_of_messages(timespan="day")
