@@ -11,31 +11,43 @@ from oauth2client import file, client, tools
 from apiclient.http import MediaFileUpload
 import os
 
-
+abs_path = '/Users/sp1r3/Documents/projects/websites/messenger'
 SCOPES = 'https://www.googleapis.com/auth/drive'
 
-store = file.Storage('creds/token.json')
+
+store = file.Storage(abs_path + 'creds/token.json')
 creds = store.get()
 if not creds or creds.invalid:
-    flow = client.flow_from_clientsecrets('creds/drivecreds.json', SCOPES)
+    flow = client.flow_from_clientsecrets(abs_path + 'creds/drivecreds.json', SCOPES)
     creds = tools.run_flow(flow, store)
 service = build('drive', 'v3', http=creds.authorize(Http()))
 
-thread_type = ThreadType.GROUP
+grapherson = Grapher()
+frequency_name = grapherson.graph_of_messages(timespan="day")
+wordcloud_name = grapherson.wordcloud(timespan = "day", show_names = False)
+print(wordcloud_name)
+print(frequency_name)
 
-#grapherson = Grapher()
-#grapherson.graph_of_messages(timespan="day")
-#photo_name = grapherson.wordcloud(timespan = "day", show_names = False)
-#print(photo_name)
-
-photo_name = "wordcloud(2018-Oct-30).png"
 folderid = '1qO9CXijYdUWL_efZZy9YlOWziOhnrlWY'
-file_metadata = {
-    'name': photo_name,
+wordcloud_metadata = {
+    'name': wordcloud_name,
     'parents':[folderid]
 }
-media = MediaFileUpload('photos/' +photo_name,
+frequency_metadata = {
+    'name': frequency_name,
+    'parents':[folderid]
+}
+
+wordcloud = MediaFileUpload(abs_path + 'photos/' +wordcloud_name,
                         mimetype='image/png')
-file= service.files().create(body=file_metadata,
-                                   media_body=media,
+file= service.files().create(body=wordcloud_metadata,
+                                   media_body=wordcloud,
                                    fields='id').execute()
+
+frequency = MediaFileUpload(abs_path + 'photos/' +frequency_name,
+                        mimetype='image/png')
+file= service.files().create(body=frequency_metadata,
+                                   media_body=frequency,
+                                   fields='id').execute()
+
+

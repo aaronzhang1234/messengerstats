@@ -11,25 +11,25 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
+abs_path = '/Users/sp1r3/Documents/projects/websites/messenger'`
 conn = psycopg2.connect("dbname=messenger user=sp1r3")
 cur = conn.cursor()
-
 class Grapher():
     def wordcloud(self, for_users=False, timespan='', show_names = False):
         date_start, date_now, date_name= self.get_dates(timespan)
-        query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND TIMESTAMP > %s AND TIMESTAMP < %s") 
+        query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND TIMESTAMP > %s AND TIMESTAMP < %s")
         cur.execute(query, (date_start, date_now))
-        texts = cur.fetchall() 
+        texts = cur.fetchall()
         total_words = self.parse_text(texts, show_names)
         wordcloud = WordCloud(collocations=False, background_color="white").generate(total_words)
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
-        photo_name = "wordcoud("+date_name+").png"
-        plt.savefig('photos/wordcloud('+date_name+').png')
+        photo_name ="wordcloud("+date_name+").png"
+        plt.savefig(abs_path+'photos/wordcloud('+date_name+').png')
         if for_users:
             query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND TIMESTAMP < %s AND NAME IS NOT NULL")
             cur.execute(query, (date_start, date_now))
-            users = cur.fetchall() 
+            users = cur.fetchall()
             for user in users:
                print("Starting " + user[1])
                query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND AUTHOR=%s AND TIMESTAMP > %s AND TIMESTAMP < %s")
@@ -40,17 +40,17 @@ class Grapher():
                    wordcloud = WordCloud(background_color="white").generate(total_words)
                    plt.imshow(wordcloud, interpolation='bilinear')
                    plt.axis("off")
-                   plt.savefig('photos/' + user[1] + '.png')
+                   plt.savefig(abs_path + 'photos/' + user[1] + '.png')
         return photo_name
         plt.cla()
     def parse_text(self, tuple_of_text, show_names):
        string_to_trim = ""
        for text in tuple_of_text:
           if len(text[0]) < 100:
-             string_to_trim = " ".join([string_to_trim,text[0].lower()]) 
+             string_to_trim = " ".join([string_to_trim,text[0].lower()])
        string_to_trim = re.sub(r"https\S+", "", string_to_trim)
-       dumb_words = open("dumbwords.txt", "r") 
-       names = open('names.txt', "r")
+       dumb_words = open(abs_path + "dumbwords.txt", "r")
+       names = open(abs_path + 'names.txt', "r")
        for dumb_word in dumb_words:
            dumb_words_stripped = (dumb_word.rstrip()).lower()
            string_to_trim = string_to_trim.replace(" "+dumb_words_stripped+" ", " ")
@@ -61,7 +61,7 @@ class Grapher():
                name_stripped = (name.rstrip()).lower()
                string_to_trim = string_to_trim.replace(" "+name_stripped+" ", " ")
                string_to_trim = string_to_trim.replace("@"+name_stripped+" ", " ")
-       dumb_words.close() 
+       dumb_words.close()
        names.close()
        return string_to_trim
     def graph_of_messages(self, timespan='week'):
@@ -69,10 +69,9 @@ class Grapher():
         query = ("SELECT DISTINCT AUTHOR,NAME,COUNT(DISTINCT MESSAGES.UID) FROM MESSAGES LEFT JOIN USERS ON AUTHOR=USERS.UID WHERE TIMESTAMP >%s AND TIMESTAMP<%s AND NAME IS NOT NULL GROUP BY AUTHOR,NAME ORDER  BY COUNT(DISTINCT MESSAGES.UID) DESC  LIMIT 5")
         cur.execute(query, (date_start, date_now))
         users = cur.fetchall()
-        user_frequency_total=OrderedDict()
-        user_frequency_time = OrderedDict()
+        user_frequency_total = OrderedDict()
+        user_frequency_time  = OrderedDict()
         for user in users:
-            print("User: " + user[1])
             hour_start = date_start
             hour_end = date_start + 3600
             user_plots_total= [0]
@@ -82,9 +81,9 @@ class Grapher():
             while hour_end <=date_now:
                 user_msgs_time = 0
                 cur.execute(query, (user[0], hour_start, hour_end))
-                tweets_in_hour = cur.fetchone() 
+                tweets_in_hour = cur.fetchone()
                 if not tweets_in_hour:
-                    user_msgs_total += 0 
+                    user_msgs_total += 0
                 else:
                     user_msgs_total +=  tweets_in_hour[1]
                     user_msgs_time   =  tweets_in_hour[1]
@@ -94,8 +93,6 @@ class Grapher():
                 hour_end   += 3600
             user_frequency_total[user[1]] = user_plots_total
             user_frequency_time[user[1]]  = user_plots_time
-            print(user_frequency_total[user[1]])
-            print(user_frequency_time[user[1]])
         plt.subplot(2,1,1)
         for user, amount in user_frequency_total.items():
             plt.plot(amount, label=user)
@@ -112,8 +109,10 @@ class Grapher():
         plt.gca().xaxis.grid(True)
         plt.xlim(left=0.0, right=24)
         plt.ylim(bottom=0.0)
-        plt.savefig("photos/messenger_frequency(" +date_name +").png")
+        picture_name = "messenger_frequency("+date_name+").png"
+        plt.savefig(abs_path + "photos/" + picture_name)
         plt.cla()
+        return picture_name
     def flesch(self, timespan=""):
         date_start, date_now, date_name = self.get_dates(timespan)
         query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND NAME IS NOT NULL")
@@ -145,7 +144,7 @@ class Grapher():
         current_time = datetime.today().replace(microsecond=0)
         this_midnight = datetime.combine(datetime.today(), time.min)
         print(this_midnight)
-        date_end = int(t.mktime(t.strptime(str(current_time), p))) 
+        date_end = int(t.mktime(t.strptime(str(current_time), p)))
         if timespan == 'hour':
             last_midnight_datetime = current_time - timedelta(hours=1)
         elif timespan == 'day':
