@@ -6,3 +6,5 @@ messages.csv
 photos/*
 .DS_Store
 names.txt
+etcstuff/*
+fill.py

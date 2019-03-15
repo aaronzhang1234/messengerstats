@@ -11,6 +11,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
+<<<<<<< HEAD
 abs_path = '/home/ubuntu/messengerstats/'
 username = "postgres"
 password = "postgres"
@@ -19,9 +20,9 @@ cur = conn.cursor()
 class Grapher():
     def wordcloud(self, for_users=False, timespan='', show_names = False):
         date_start, date_now, date_name= self.get_dates(timespan)
-        query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND TIMESTAMP > %s AND TIMESTAMP < %s") 
+        query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND TIMESTAMP > %s AND TIMESTAMP < %s")
         cur.execute(query, (date_start, date_now))
-        texts = cur.fetchall() 
+        texts = cur.fetchall()
         total_words = self.parse_text(texts, show_names)
         wordcloud = WordCloud(collocations=False, background_color="white").generate(total_words)
         plt.imshow(wordcloud, interpolation='bilinear')
@@ -31,7 +32,7 @@ class Grapher():
         if for_users:
             query = ("SELECT DISTINCT AUTHOR, NAME FROM MESSAGES LEFT JOIN USERS ON USERS.UID=MESSAGES.AUTHOR WHERE TIMESTAMP > %s AND TIMESTAMP < %s AND NAME IS NOT NULL")
             cur.execute(query, (date_start, date_now))
-            users = cur.fetchall() 
+            users = cur.fetchall()
             for user in users:
                print("Starting " + user[1])
                query = ("SELECT TEXT FROM MESSAGES WHERE ATTACHMENT_ID IS NULL AND TEXT IS NOT NULL AND AUTHOR=%s AND TIMESTAMP > %s AND TIMESTAMP < %s")
@@ -49,9 +50,13 @@ class Grapher():
        string_to_trim = ""
        for text in tuple_of_text:
           if len(text[0]) < 100:
-             string_to_trim = " ".join([string_to_trim,text[0].lower()]) 
+             string_to_trim = " ".join([string_to_trim,text[0].lower()])
        string_to_trim = re.sub(r"https\S+", "", string_to_trim)
+<<<<<<< HEAD
        dumb_words = open(abs_path + "dumbwords.txt", "r") 
+=======
+       dumb_words = open(abs_path + "dumbwords.txt", "r")
+>>>>>>> 3428d81bffda093bf80b20b1ae1685d67f89ea79
        names = open(abs_path + 'names.txt', "r")
        for dumb_word in dumb_words:
            dumb_words_stripped = (dumb_word.rstrip()).lower()
@@ -63,7 +68,7 @@ class Grapher():
                name_stripped = (name.rstrip()).lower()
                string_to_trim = string_to_trim.replace(" "+name_stripped+" ", " ")
                string_to_trim = string_to_trim.replace("@"+name_stripped+" ", " ")
-       dumb_words.close() 
+       dumb_words.close()
        names.close()
        return string_to_trim
     def graph_of_messages(self, timespan='week'):
@@ -83,9 +88,9 @@ class Grapher():
             while hour_end <=date_now:
                 user_msgs_time = 0
                 cur.execute(query, (user[0], hour_start, hour_end))
-                tweets_in_hour = cur.fetchone() 
+                tweets_in_hour = cur.fetchone()
                 if not tweets_in_hour:
-                    user_msgs_total += 0 
+                    user_msgs_total += 0
                 else:
                     user_msgs_total +=  tweets_in_hour[1]
                     user_msgs_time   =  tweets_in_hour[1]
@@ -146,7 +151,7 @@ class Grapher():
         current_time = datetime.today().replace(microsecond=0)
         this_midnight = datetime.combine(datetime.today(), time.min)
         print(this_midnight)
-        date_end = int(t.mktime(t.strptime(str(current_time), p))) 
+        date_end = int(t.mktime(t.strptime(str(current_time), p)))
         if timespan == 'hour':
             last_midnight_datetime = current_time - timedelta(hours=1)
         elif timespan == 'day':

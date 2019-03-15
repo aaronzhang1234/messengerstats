@@ -31,6 +31,7 @@ print(frequency_name)
 folderid = '1qO9CXijYdUWL_efZZy9YlOWziOhnrlWY'
 wordcloud_metadata = {
     'name': wordcloud_name,
+<<<<<<< HEAD
     'parents':[folderid]
 }
 frequency_metadata = {
@@ -49,3 +50,11 @@ frequency = MediaFileUpload(abs_path + 'photos/' +frequency_name,
 file= service.files().create(body=frequency_metadata,
                                    media_body=frequency,
                                    fields='id').execute()
+
+frequency = MediaFileUpload(abs_path + 'photos/' +frequency_name,
+                        mimetype='image/png')
+file= service.files().create(body=frequency_metadata,
+                                   media_body=frequency,
+                                   fields='id').execute()
+
+

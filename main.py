@@ -4,6 +4,6 @@ import json
 
 
 conf = json.load(open('creds/config.json', 'r'))
-client = CustomClient(conf['username_aaron'],conf['password_aaron'])
+client = CustomClient(conf['username_god'],conf['password_god'])
 client.listen()
 
