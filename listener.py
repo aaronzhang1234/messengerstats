@@ -5,7 +5,7 @@ import json
 import time
 
 thread_type = ThreadType.GROUP
-conn = psycopg2.connect("dbname=messenger user=postgres password=postgres")
+conn = psycopg2.connect("dbname=messenger user=sp1r3")
 cur = conn.cursor()
 class CustomClient(Client):
     def onPeopleAdded(self, added_ids, author_id, thread_id, **kwargs):

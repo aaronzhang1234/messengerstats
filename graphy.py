@@ -31,7 +31,6 @@ print(frequency_name)
 folderid = '1qO9CXijYdUWL_efZZy9YlOWziOhnrlWY'
 wordcloud_metadata = {
     'name': wordcloud_name,
-<<<<<<< HEAD
     'parents':[folderid]
 }
 frequency_metadata = {

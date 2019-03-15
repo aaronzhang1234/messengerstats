@@ -11,11 +11,8 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-<<<<<<< HEAD
 abs_path = '/home/ubuntu/messengerstats/'
-username = "postgres"
-password = "postgres"
-conn = psycopg2.connect("dbname=messenger user="+username+" password="+password)
+conn = psycopg2.connect("dbname=messenger user=sp1r3")
 cur = conn.cursor()
 class Grapher():
     def wordcloud(self, for_users=False, timespan='', show_names = False):
@@ -52,11 +49,7 @@ class Grapher():
           if len(text[0]) < 100:
              string_to_trim = " ".join([string_to_trim,text[0].lower()])
        string_to_trim = re.sub(r"https\S+", "", string_to_trim)
-<<<<<<< HEAD
        dumb_words = open(abs_path + "dumbwords.txt", "r") 
-=======
-       dumb_words = open(abs_path + "dumbwords.txt", "r")
->>>>>>> 3428d81bffda093bf80b20b1ae1685d67f89ea79
        names = open(abs_path + 'names.txt', "r")
        for dumb_word in dumb_words:
            dumb_words_stripped = (dumb_word.rstrip()).lower()
