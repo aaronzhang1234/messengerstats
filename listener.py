@@ -45,7 +45,6 @@ class CustomClient(Client):
                     show_msg = "\n".join(show_list)
                     self.send(Message(text=show_msg), thread_id = author_id, thread_type = ThreadType.USER)
                 if message_object.text[:5] == "!join":
-                    self.send(Message(text="This is a test"), thread_id = author_id, thread_type=ThreadType.USER)
                     server_id = message_object.text[6:]
                     cur.execute("SELECT * FROM ACCESS WHERE UID = %s AND THREAD_ID = %s", (author_id, server_id))
                     is_allowed = cur.fetchone()
@@ -53,6 +52,7 @@ class CustomClient(Client):
                         print(server_id)
                         try:
                             self.addUsersToGroup([author_id], server_id)
+                            self.send(Message(text="Joined!"), thread_id = author_id, thread_type=ThreadType.USER)
                         except FBchatFacebookError:
                             self.send(Message(text="Something went wrong, you're probably already in this chat"), thread_id = author_id, thread_type=ThreadType.USER)
                     else:
