@@ -45,18 +45,22 @@ class CustomClient(Client):
                     show_msg = "\n".join(show_list)
                     self.send(Message(text=show_msg), thread_id = author_id, thread_type = ThreadType.USER)
                 if message_object.text[:5] == "!join":
-                    server_id = message_object.text[6:]
-                    cur.execute("SELECT * FROM ACCESS WHERE UID = %s AND THREAD_ID = %s", (author_id, server_id))
-                    is_allowed = cur.fetchone()
-                    if is_allowed:
-                        print(server_id)
-                        try:
-                            self.addUsersToGroup([author_id], server_id)
-                            self.send(Message(text="Joined!"), thread_id = author_id, thread_type=ThreadType.USER)
-                        except FBchatFacebookError:
-                            self.send(Message(text="Something went wrong, you're probably already in this chat"), thread_id = author_id, thread_type=ThreadType.USER)
-                    else:
-                        self.send(Message(text="You are not allowed into this chat"), thread_id = author_id, thread_type=ThreadType.USER)
+                    try:
+                        server_id = message_object.text[6:]
+                        cur.execute("SELECT * FROM ACCESS WHERE UID = %s AND THREAD_ID = %s", (author_id, server_id))
+                        is_allowed = cur.fetchone()
+                        if is_allowed:
+                            try:
+                                self.addUsersToGroup([author_id], server_id)
+                                self.send(Message(text="Joined!"), thread_id = author_id, thread_type=ThreadType.USER)
+                            except FBchatFacebookError:
+                                self.send(Message(text="Something went wrong, you're probably already in this chat"), thread_id = author_id, thread_type=ThreadType.USER)
+                        else:
+                            self.send(Message(text="You are not allowed into this chat"), thread_id = author_id, thread_type=ThreadType.USER)
+                    except Exception as e:
+                        f = open('fug.txt', 'w')
+                        f.write(e)
+                        f.close()
         else:
             self.addUser(author_id)
             attachments = message_object.attachments
