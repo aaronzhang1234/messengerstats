@@ -45,6 +45,6 @@ textstat==0.5.4
 traitlets==4.3.2
 typed-ast==1.1.1
 uritemplate==3.0.0
-urllib3==1.24.1
+urllib3==1.24.2
 wordcloud==1.5.0
 wrapt==1.10.11
